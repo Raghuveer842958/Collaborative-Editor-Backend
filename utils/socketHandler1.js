@@ -10,7 +10,13 @@ const socketHandler = (io) => {
     console.log("New socket connected:", socket.id);
 
     socket.on("join-room", async (roomId, userId, userName, langId) => {
-      console.log("roomId, userId, userName, langId:", roomId, userId, userName, langId);
+      console.log(
+        "roomId, userId, userName, langId:",
+        roomId,
+        userId,
+        userName,
+        langId
+      );
 
       const userData = {
         id: userId,
@@ -25,7 +31,9 @@ const socketHandler = (io) => {
       roomData = roomData ? JSON.parse(roomData) : null;
 
       if (!roomData) {
-        const filteredData = supportedLanguage.find((lang) => lang.id === langId);
+        const filteredData = supportedLanguage.find(
+          (lang) => lang.id === langId
+        );
 
         console.log("Default code is:", filteredData?.defaultCode);
 
@@ -87,6 +95,19 @@ const socketHandler = (io) => {
       io.to(roomId).emit("show-output", response);
     });
 
+    socket.on("join-call", (roomId, userId) => {
+      socket.join(roomId);
+      socket.to(roomId).emit("user-joined", userId);
+    });
+
+    socket.on("sending-signal", ({ userToSignal, callerID, signal }) => {
+      io.to(userToSignal).emit("signal", { from: callerID, signal });
+    });
+
+    socket.on("returning-signal", ({ signal, callerID }) => {
+      io.to(callerID).emit("signal", { from: socket.id, signal });
+    });
+
     socket.on("disconnect", async () => {
       console.log("A user disconnected:", socket.id);
 
@@ -98,7 +119,9 @@ const socketHandler = (io) => {
 
         if (roomData) {
           // Carefully remove user by their userId, not necessarily socket.id
-          roomData.users = roomData.users.filter((user) => user.id !== socket.id);
+          roomData.users = roomData.users.filter(
+            (user) => user.id !== socket.id
+          );
 
           if (roomData.users.length === 0) {
             await redisClient.del(roomId);
