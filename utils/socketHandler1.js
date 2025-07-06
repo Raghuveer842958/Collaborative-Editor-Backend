@@ -1,5 +1,3 @@
-// sockets/socketHandler.js
-
 const { executeCode } = require("../controllers/executeCodeController");
 
 const { supportedLanguage } = require("./supportedLanguage");
@@ -95,9 +93,24 @@ const socketHandler = (io) => {
       io.to(roomId).emit("show-output", response);
     });
 
+    // socket.on("join-call", (roomId, userId) => {
+    //   socket.join(roomId);
+    //   socket.to(roomId).emit("user-joined", userId);
+    // });
+
     socket.on("join-call", (roomId, userId) => {
       socket.join(roomId);
-      socket.to(roomId).emit("user-joined", userId);
+
+      // Tell the new user about existing users
+      const clients = Array.from(
+        io.sockets.adapter.rooms.get(roomId) || []
+      ).filter((id) => id !== socket.id);
+
+      // Emit to new user: list of existing socket ids
+      socket.emit("all-users", clients);
+
+      // Notify others about the new user
+      socket.to(roomId).emit("user-joined", socket.id);
     });
 
     socket.on("sending-signal", ({ userToSignal, callerID, signal }) => {
