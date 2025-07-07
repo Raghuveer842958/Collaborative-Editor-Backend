@@ -14,7 +14,8 @@ connectDB();
 // Middleware
 app.use(
   cors({
-    origin: "https://collaborative-editor-web.vercel.app",
+    // origin: "https://collaborative-editor-web.vercel.app",
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
@@ -38,8 +39,8 @@ const io = new Server(server, {
   },
 });
 
-const socketHandler = require("./utils/socketHandler1");
-socketHandler(io);
+// const socketHandler = require("./utils/socketHandler1");
+// socketHandler(io);
 
 server.listen(5000, () => {
   console.log("Server running on port 5000");
